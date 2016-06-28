@@ -1,0 +1,86 @@
+<!DOCTYPE configuration>
+<configuration>
+	<!-- Appenders -->
+	<appender name="FCE_FILE" class="ch.qos.logback.core.FileAppender">
+		<file>${catalina.base}/logs/fce.log</file>
+		<encoder>
+			<pattern>
+				[FCE] [%d] %p - %logger,%msg%n
+			</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+			</Pattern>
+		</layout>
+	</appender>
+	
+	<appender name="ACCESS_LOG"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${catalina.base}/logs/access.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- daily rollover -->
+			<fileNamePattern>${catalina.base}/logs/access.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<!-- keep 30 days' worth of history -->
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%X{client_ip} [%d{dd/MMM/yyyy:HH:mm:ss,SSSS}] method=%X{method} url="%X{url}"  query_string="%X{query_string}"  protocol=%X{protocol} status=%X{httpStatus} size=%X{size} time=%X{time} referer="%X{referer}" user_agent="%X{user_agent}" client_ip="%X{forwarded_header}" request_host="%X{request_host"}" rewritedest="%X{rewritedest}" %msg%n</pattern>
+		</encoder>
+	</appender> 
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<pattern>[FCE] [%d] %p - %logger,%msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- Loggers -->
+	<!-- Logback -->
+	<logger name="ch.qos" level="ALL" />
+
+	<!-- SPRING -->
+	<logger name="org.springframework" level="INFO" />
+	<logger name="org.springframework.core" level="INFO" />
+	<logger name="org.springframework.test" level="INFO" />
+	<logger name="org.springframework.beans" level="WARN" />
+	<logger name="org.springframework.context" level="INFO" />
+	<logger name="org.springframework.batch" level="INFO" />
+	<logger name="org.springframework.jdbc" level="WARN" />
+	<logger name="org.springframework.jdbc.datasource.init" level="INFO" />
+	<logger name="org.springframework.jdbc.datasource.DataSourceUtils" level="INFO" />
+	<logger name="org.springframework.aop" level="INFO" />
+	<logger name="org.springframework.transaction" level="INFO" />
+	<logger name="org.springframework.security" level="INFO" />
+
+	<!-- JDBC -->
+	<logger name="java.sql.ResultSet" level="INFO" />
+	<logger name="org.apache.commons.dbcp" level="INFO" />
+	<logger name="java.sql.Connection" level="INFO" />
+	<logger name="java.sql.Statement" level="INFO" />
+	<logger name="java.sql.PreparedStatement" level="INFO" />
+	<logger name="java.sql.ResultSet" level="INFO" />
+
+	<!-- HUB ECR -->
+	<logger name="com.navteq" level="INFO" />
+
+	<!-- SENTRY -->
+	<logger name="org.quartz" level="INFO" />
+	<logger name="com.sentry" level="INFO" />
+	<logger name="httpclient.wire" level="INFO" />
+
+	<logger name="com.here.common" level="INFO" />
+	<logger name="com.here.fce" level="INFO" />
+
+	<!-- Access Logger -->
+	<logger name="AccessLogLogger" level="INFO" additivity="false">
+		<appender-ref ref="ACCESS_LOG" />
+	</logger>
+	
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>
