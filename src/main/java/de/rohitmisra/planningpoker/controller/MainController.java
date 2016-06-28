@@ -66,7 +66,7 @@ public class MainController extends BaseController implements InitializingBean {
     	}
     	for(VoteRequest voteRequest : votes){
     		if(voteRequest.getUser().equals(user))
-    			throw new IllegalAccessError(user + " has already Voted");
+    			throw new IllegalArgumentException(user + " has already Voted");
     	}
     	
     	total += vote;
