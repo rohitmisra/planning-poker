@@ -29,7 +29,26 @@ public class BaseController {
         return jsonOutputStream.toString("UTF-8");
     }
     
-    
+    public Double maxDiff(Double[] arr, int n){
+    	double maxDiff = -1; // Initialize Result
+    	 
+        double maxRight = arr[n-1]; // Initialize max element from right side
+     
+        for (int i = n-2; i >= 0; i--)
+        {
+            if (arr[i] > maxRight)
+                maxRight = arr[i];
+            else
+            {
+            	double diff = maxRight - arr[i];
+                if (diff > maxDiff)
+                {
+                    maxDiff = diff;
+                }
+            }
+        }
+        return maxDiff;
+    }
     
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(value=HttpStatus.BAD_REQUEST)
