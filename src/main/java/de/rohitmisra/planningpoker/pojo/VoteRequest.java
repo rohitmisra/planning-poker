@@ -1,9 +1,17 @@
 package de.rohitmisra.planningpoker.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class VoteRequest {
-	Double vote;
-	String user;
-	Long time;
+	@JsonProperty("vote")
+	private Double vote;
+	
+	@JsonProperty("user")
+	private String user;
+
+	private Long time;
+	
 	public Double getVote() {
 		return vote;
 	}

@@ -40,6 +40,8 @@ public class MainController extends BaseController implements InitializingBean {
 
 	private List<Double> allowedValues;
 	
+	private List<VoteRequest> votes = new ArrayList<VoteRequest>();
+	
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		// TODO Auto-generated method stub
@@ -62,12 +64,17 @@ public class MainController extends BaseController implements InitializingBean {
     	if(!users.contains(user)){
     		throw new IllegalArgumentException("User doesn't exist");
     	}
+    	for(VoteRequest voteRequest : votes){
+    		if(voteRequest.getUser().equals(user))
+    			throw new IllegalAccessError(user + " has already Voted");
+    	}
     	
     	total += vote;
+    	
 		final DeferredResult<ResponseEntity<String>> deferredResult = new DeferredResult<ResponseEntity<String>>(DEFFERED_REQUEST_TIMEOUT); 
     	
     	VoteRequest req = new VoteRequest(vote, user, time);
-    	
+    	votes.add(req);
     	deferredResultMap.put(deferredResult, req);
     	deferredResult.onCompletion(new Runnable() {
 			@Override
@@ -95,6 +102,7 @@ public class MainController extends BaseController implements InitializingBean {
 			produces = { "application/json;charset=UTF-8" }
 			)
 	public ResponseEntity<String> createPOST( @RequestParam(value="user",   required=true)	String	user){
+		if(users.contains(user)) throw new IllegalArgumentException("User already Exists");
 		if(user!=null && !user.equals("")){
 			users.add(user);
 		}
@@ -106,12 +114,48 @@ public class MainController extends BaseController implements InitializingBean {
     @Scheduled(fixedRate = MESSAGE_QUEUE_PROCESS_FREQ)
     public void processMessageQueues() throws JsonProcessingException, IOException {
     	if (!this.deferredResultMap.isEmpty() && this.deferredResultMap.size()==users.size()) {
-    		VotingResponse result = new VotingResponse(total/users.size());
+    		
+    		Double [] votesArr = new Double[votes.size()]; 
+    		VotingResponse result;
+    		for(int i=0;i<votes.size();i++){
+    			votesArr[i] = (double) allowedValues.indexOf(votes.get(i).getVote())+1;
+    		}
+    		
+    		if(maxDiff(votesArr, votesArr.length)>2){
+    			result = new VotingResponse(total/users.size(), "Two persons have conflicts", votes);
+    		}else{
+    			result = new VotingResponse(total/users.size(), "We have a result", votes);
+    		}
+    		
+    		
     		for(Entry<DeferredResult<ResponseEntity<String>>, VoteRequest> entry : this.deferredResultMap.entrySet()) {
 		    	DeferredResult<ResponseEntity<String>> deferredResult = entry.getKey();
 		    	deferredResult.setResult(new ResponseEntity<String>(serializeToJson(result, ""), HttpStatus.OK));
     		}
+    		this.deferredResultMap.clear();
+    		votes.clear();
     	}
-   }
+    }
+    
+    public Double maxDiff(Double[] arr, int n){
+    	double maxDiff = -1; // Initialize Result
+    	 
+        double maxRight = arr[n-1]; // Initialize max element from right side
+     
+        for (int i = n-2; i >= 0; i--)
+        {
+            if (arr[i] > maxRight)
+                maxRight = arr[i];
+            else
+            {
+            	double diff = maxRight - arr[i];
+                if (diff > maxDiff)
+                {
+                    maxDiff = diff;
+                }
+            }
+        }
+        return maxDiff;
+    }
 
 }
