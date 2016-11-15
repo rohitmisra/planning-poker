@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
+
+@JsonRootName("result")
 public class VotingResponse implements IGenericResponse{
 	/**
 	 * 
@@ -17,8 +20,14 @@ public class VotingResponse implements IGenericResponse{
 	@JsonProperty("result")
 	String result;
 	
+	@JsonProperty("resultcode")
+	String resultcode;
+	
 	@JsonProperty("votes")
 	List<VoteRequest> votes = new ArrayList<VoteRequest>();
+	
+	@JsonProperty("conflicts")
+	List<Conflict> conflicts = new ArrayList<Conflict>();
 
 	public Double getAverage() {
 		return average;
@@ -47,12 +56,23 @@ public class VotingResponse implements IGenericResponse{
 	public void addVote(VoteRequest vote) {
 		this.votes.add(vote);
 	}
+	
 
-	public VotingResponse(Double average, String result, List<VoteRequest> votes) {
+	public List<Conflict> getConflicts() {
+		return conflicts;
+	}
+
+	public void setConflicts(List<Conflict> conflicts) {
+		this.conflicts = conflicts;
+	}
+
+	public VotingResponse(Double average, String result, List<VoteRequest> votes, String resultcode, List<Conflict> conflicts) {
 		super();
 		this.average = average;
 		this.result = result;
 		this.votes = votes;
+		this.resultcode = resultcode;
+		this.conflicts = conflicts;
 	}
 
 	

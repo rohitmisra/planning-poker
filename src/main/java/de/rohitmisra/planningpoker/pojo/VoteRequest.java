@@ -10,8 +10,20 @@ public class VoteRequest {
 	@JsonProperty("user")
 	private String user;
 
+	@JsonIgnore
 	private Long time;
 	
+	@JsonProperty("conflict")
+	private boolean isConflicted;
+	
+	
+	
+	public boolean isConflicted() {
+		return isConflicted;
+	}
+	public void setConflicted(boolean isConflicted) {
+		this.isConflicted = isConflicted;
+	}
 	public Double getVote() {
 		return vote;
 	}

@@ -21,6 +21,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import de.rohitmisra.planningpoker.pojo.Conflict;
 import de.rohitmisra.planningpoker.pojo.VoteRequest;
 import de.rohitmisra.planningpoker.pojo.VotingResponse;
 
@@ -38,15 +39,12 @@ public class MainController extends BaseController implements InitializingBean {
 	
 	private final Map<DeferredResult<ResponseEntity<String>>,VoteRequest> deferredResultMap = new ConcurrentHashMap<DeferredResult<ResponseEntity<String>>, VoteRequest>();
 
-	private List<Double> allowedValues;
-	
 	private List<VoteRequest> votes = new ArrayList<VoteRequest>();
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		// TODO Auto-generated method stub
 		System.out.println("started...");
-		allowedValues = new ArrayList<Double>(Arrays.asList(-1d,0d,0.5d,1d,2d,3d,5d,8d,13d,20d,40d,80d,100d));
 		total = 0d;
 	}
 	
@@ -57,13 +55,14 @@ public class MainController extends BaseController implements InitializingBean {
                                               @RequestParam(value="vote",	required=true)	Double	vote,
                                               @RequestParam(value="time",   required=true)	Long    time
                                              ) throws JsonParseException, IOException{
-    	if(!allowedValues.contains(vote)){
+		if(!users.contains(user)){
+    		throw new IllegalArgumentException("User doesn't exist");
+    	}
+		
+		if(!allowedValues.contains(vote)){
     		throw new IllegalArgumentException("This value of vote is not allowed");
     	}
     	
-    	if(!users.contains(user)){
-    		throw new IllegalArgumentException("User doesn't exist");
-    	}
     	for(VoteRequest voteRequest : votes){
     		if(voteRequest.getUser().equals(user))
     			throw new IllegalArgumentException(user + " has already Voted");
@@ -106,25 +105,36 @@ public class MainController extends BaseController implements InitializingBean {
 		if(user!=null && !user.equals("")){
 			users.add(user);
 		}
-		return new ResponseEntity<String>("", HttpStatus.OK);
+		return new ResponseEntity<String>("{\"created\":\""+user+"\"}", HttpStatus.OK);
+	}
+	
+	@RequestMapping(
+			value = "/delete.json",
+			method = { RequestMethod.GET },
+			produces = { "application/json;charset=UTF-8" }
+			)
+	public ResponseEntity<String> delete( @RequestParam(value="user",   required=true)	String	user){
+		if(!users.contains(user)) throw new IllegalArgumentException("User already Exists");
+		if(user!=null && !user.equals("")){
+			users.remove(user);
+		}
+		return new ResponseEntity<String>("{\"deleted\":\""+user+"\"}", HttpStatus.OK);
 	}
 	
 	
 	
-    @Scheduled(fixedRate = MESSAGE_QUEUE_PROCESS_FREQ)
+    @SuppressWarnings("unchecked")
+	@Scheduled(fixedRate = MESSAGE_QUEUE_PROCESS_FREQ)
     public void processMessageQueues() throws JsonProcessingException, IOException {
     	if (!this.deferredResultMap.isEmpty() && this.deferredResultMap.size()==users.size()) {
     		
-    		Double [] votesArr = new Double[votes.size()]; 
-    		VotingResponse result;
-    		for(int i=0;i<votes.size();i++){
-    			votesArr[i] = (double) allowedValues.indexOf(votes.get(i).getVote())+1;
-    		}
+    		Map<String, Object> votingResult = evaluate(votes);
     		
-    		if(maxDiff(votesArr, votesArr.length)>2){
-    			result = new VotingResponse(total/users.size(), "Two persons have conflicts", votes);
+    		VotingResponse result;
+			if(votingResult.get("result").equals("C")){
+    			result = new VotingResponse(total/users.size(), "There are conflicts", (List<VoteRequest>) votingResult.get("votes"), "C", (List<Conflict>) votingResult.get("conflicts"));
     		}else{
-    			result = new VotingResponse(total/users.size(), "We have a result", votes);
+    			result = new VotingResponse(total/users.size(), "We have a result", (List<VoteRequest>) votingResult.get("votes"), "S", null);
     		}
     		
     		
